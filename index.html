@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MEDnexo</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="app">
+    <header>
+      <h1>MEDnexo</h1>
+      <div class="date-selector">
+        <label for="day-select">Jogo de: </label>
+        <select id="day-select" onchange="changeGame(this.value)">
+          <option value="11/01/26">11/01/26</option>
+          <option value="12/01/26">12/01/26</option>
+          <option value="13/01/26">13/01/26</option>
+        </select>
+      </div>
+      <p>Identifique 4 grupos de termos que compartilham uma conexão oculta.</p>
+    </header>
+
+    <div id="solved-container"></div>
+    <div id="grid" class="grid"></div>
+
+    <div id="game-controls" class="controls">
+      <div id="mistakes">Erros restantes: <span id="lives"></span></div>
+      <div class="action-buttons">
+        <button id="clearBtn">Limpar</button>
+        <button id="submitBtn" disabled>Confirmar</button>
+      </div>
+    </div>
+
+    <div id="status-panel" class="status-panel hidden">
+      <h2 id="status-title"></h2>
+      <p id="status-message"></p>
+      <button id="shareBtn" onclick="shareResult()">Compartilhar Resultado</button>
+    </div>
+
+    <footer class="watermark">Larissa Nacif</footer>
+  </div>
+  <script src="script.js"></script>
+</body>
+</html>
