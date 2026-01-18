@@ -21,11 +21,21 @@
       <p>Identifique 4 grupos de termos que compartilham uma conexão oculta.</p>
     </header>
 
+    <div class="game-stats-live">
+      <div class="stat-box">
+        <small>TENTATIVAS</small>
+        <span id="attempts-counter" class="counter">0 / 7</span>
+      </div>
+      <div class="stat-box accent-border">
+        <small>TEMPO</small>
+        <span id="liveTimer" class="counter timer-highlight">0m 0s</span>
+      </div>
+    </div>
+
     <div id="solved-container"></div>
     <div id="grid" class="grid"></div>
 
     <div id="game-controls" class="controls">
-      <div id="mistakes">Erros restantes: <span id="lives"></span></div>
       <div class="action-buttons">
         <button id="clearBtn">Limpar</button>
         <button id="submitBtn" disabled>Confirmar</button>
@@ -34,6 +44,7 @@
 
     <div id="status-panel" class="status-panel hidden">
       <h2 id="status-title"></h2>
+      <div id="final-stats"></div>
       <p id="status-message"></p>
       <button id="shareBtn" onclick="shareResult()">Compartilhar Resultado</button>
     </div>
