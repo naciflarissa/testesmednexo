@@ -1,5 +1,5 @@
 const gamesDatabase = {
-    "11/01/26": {
+    "11/01/2026": {
         groups: [
             { level: 1, title: "Achados na Insuficiência Cardíaca", items: ["B3", "ESTASE JUGULAR", "EDEMA DE MMII", "ORTOPNEIA"] },
             { level: 2, title: "Hepatites Virais", items: ["HBSAG", "ANTI-HCV", "ICTERÍCIA", "FECAL-ORAL"] },
@@ -7,7 +7,7 @@ const gamesDatabase = {
             { level: 4, title: "Epônimos com 'Murphy'", items: ["SINAL", "PONTO", "TRÍADE", "BOTÃO"] }
         ]
     },
-    "12/01/26": {
+    "12/01/2026": {
         groups: [
             { level: 1, title: "Sinais de Irritação Peritoneal", items: ["BLUMBERG", "ROVSING", "LAPINSKY", "GENEAU DE MUSSY"] },
             { level: 2, title: "Exames de Triagem Neonatal", items: ["PEZINHO", "ORELHINHA", "CORAÇÃOZINHO", "OLHINHO"] },
@@ -15,7 +15,7 @@ const gamesDatabase = {
             { level: 4, title: "Escalas de Coma/Sedação", items: ["GLASGOW", "RAMSAY", "RASS", "FOUR"] }
         ]
     },
-    "13/01/26": {
+    "13/01/2026": {
         groups: [
             { level: 1, title: "Sintomas de Tuberculose", items: ["TOSSE", "FEBRE VESPERTINA", "SUDORESE NOTURNA", "EMAGRECIMENTO"] },
             { level: 2, title: "Tipos de Insulina", items: ["NPH", "REGULAR", "LISPRO", "GLARGINA"] },
@@ -31,69 +31,54 @@ let lives = 7;
 const maxLives = 7;
 let currentItems = [];
 let solvedLevels = []; 
-let currentKey = "11/01/26";
+let currentKey = "11/01/2026";
 
-let startTime, endTime, timerInterval;
-let gameStarted = false;
+let startTime, timerInterval, gameStarted = false;
 
 function formatDuration(ms) {
-    const totalSeconds = Math.floor(ms / 1000);
-    const minutes = Math.floor(totalSeconds / 60);
-    const seconds = totalSeconds % 60;
-    return `${minutes}m ${seconds}s`;
+    const s = Math.floor(ms / 1000);
+    return `${Math.floor(s / 60)}m ${s % 60}s`;
 }
 
 function startTimer() {
     if (timerInterval) return;
     startTime = Date.now();
     timerInterval = setInterval(() => {
-        const diff = Date.now() - startTime;
-        document.getElementById("liveTimer").textContent = formatDuration(diff);
+        document.getElementById("liveTimer").textContent = formatDuration(Date.now() - startTime);
     }, 1000);
 }
 
 function init() {
     const savedStatus = localStorage.getItem(`nexo_status_${currentKey}`);
-    
-    document.getElementById("grid").style.display = "grid";
-    document.getElementById("grid").style.pointerEvents = "auto";
-    document.getElementById("grid").style.opacity = "1";
+    const gridEl = document.getElementById("grid");
+    gridEl.style.display = "grid"; gridEl.style.pointerEvents = "auto"; gridEl.style.opacity = "1";
     document.getElementById("game-controls").style.display = "block";
     document.getElementById("status-panel").classList.add("hidden");
     document.getElementById("solved-container").innerHTML = "";
     document.getElementById("liveTimer").textContent = "0m 0s";
     
-    clearInterval(timerInterval);
-    timerInterval = null;
-    gameStarted = false;
-    userAssignments = {};
-    lives = maxLives;
-    solvedLevels = [];
+    clearInterval(timerInterval); timerInterval = null; gameStarted = false;
+    userAssignments = {}; lives = maxLives; solvedLevels = [];
     
     const game = gamesDatabase[currentKey];
     currentItems = [];
     game.groups.forEach(g => currentItems.push(...g.items));
-    
-    if (!savedStatus) {
-        currentItems.sort(() => Math.random() - 0.5);
-    }
+    if (!savedStatus) currentItems.sort(() => Math.random() - 0.5);
     
     renderGrid();
     updateUI();
 
     if (savedStatus) {
-        game.groups.forEach(g => renderSolvedRow(g, COLORS[g.level]));
-        currentItems = [];
-        renderGrid();
-        const win = savedStatus === "won";
-        showGameOver(win ? "Parabéns! 🎈" : "Que pena! 😔", win ? "Você encontrou as conexões ocultas!" : "Você não encontrou as conexões. Tente novamente amanhã.", win ? COLORS[1] : COLORS[3], false);
+        game.groups.forEach(g => {
+            renderSolvedRow(g, COLORS[g.level]);
+            solvedLevels.push(g.level);
+        });
+        currentItems = []; renderGrid();
+        showGameOver(savedStatus === "won" ? "Parabéns! 🎈" : "Que pena! 😔", "", COLORS[savedStatus === "won" ? 1 : 3], false);
     }
 }
 
-function changeGame(val) {
-    currentKey = val;
-    init();
-}
+function changeGame(val) { currentKey = val; init(); }
 
 function renderGrid() {
     const grid = document.getElementById("grid");
@@ -109,80 +94,61 @@ function renderGrid() {
 }
 
 function handleSelection(text) {
-    if (!gameStarted) {
-        gameStarted = true;
-        startTimer();
-    }
-
+    if (!gameStarted) { gameStarted = true; startTimer(); }
     if (userAssignments[text]) {
         delete userAssignments[text];
     } else {
-        const possibleColors = [1, 2, 3, 4].filter(c => !solvedLevels.includes(c));
-        for (let c of possibleColors) {
-            const currentSelectedInColor = Object.values(userAssignments).filter(v => v === c).length;
-            if (currentSelectedInColor < 4) {
-                userAssignments[text] = c;
-                break;
+        const possible = [1, 2, 3, 4].filter(c => !solvedLevels.includes(c));
+        for (let c of possible) {
+            if (Object.values(userAssignments).filter(v => v === c).length < 4) {
+                userAssignments[text] = c; break;
             }
         }
     }
-    renderGrid();
-    updateUI();
+    renderGrid(); updateUI();
 }
 
 function updateUI() {
-    const totalSelected = Object.keys(userAssignments).length;
-    document.getElementById("submitBtn").disabled = totalSelected !== currentItems.length || currentItems.length === 0;
-    
-    const attemptsUsed = maxLives - lives;
-    document.getElementById("attempts-counter").textContent = `${attemptsUsed} / ${maxLives}`;
+    document.getElementById("submitBtn").disabled = Object.keys(userAssignments).length !== currentItems.length || currentItems.length === 0;
+    document.getElementById("attempts-counter").textContent = `${maxLives - lives} / ${maxLives}`;
 }
 
 document.getElementById("submitBtn").onclick = async () => {
     const activeColors = [...new Set(Object.values(userAssignments))].sort();
-    
     const sorted = [];
-    activeColors.forEach(c => {
-        sorted.push(...currentItems.filter(w => userAssignments[w] === c));
-    });
+    activeColors.forEach(c => sorted.push(...currentItems.filter(w => userAssignments[w] === c)));
     currentItems = sorted;
     renderGrid();
-
     await new Promise(r => setTimeout(r, 600));
 
-    let correctThisTurn = [];
-    let wrongThisTurn = [];
+    let correctGroups = [];
+    let wrongColors = [];
 
     activeColors.forEach(colorId => {
-        const wordsInColor = Object.keys(userAssignments).filter(k => userAssignments[k] === colorId);
-        const match = gamesDatabase[currentKey].groups.find(g => 
-            g.items.every(item => wordsInColor.includes(item))
-        );
-
+        const words = Object.keys(userAssignments).filter(k => userAssignments[k] === colorId);
+        const match = gamesDatabase[currentKey].groups.find(g => g.items.every(i => words.includes(i)));
         if (match) {
-            correctThisTurn.push({ group: match, words: wordsInColor, colorId: colorId });
+            correctGroups.push({ group: match, words: words, colorId: colorId });
         } else {
-            wrongThisTurn.push(colorId);
+            wrongColors.push(colorId);
         }
     });
 
-    if (correctThisTurn.length > 0) {
-        correctThisTurn.forEach(ct => {
-            document.querySelectorAll(`.sel-g${ct.colorId}`).forEach(el => el.classList.add("correct-anim"));
+    if (correctGroups.length > 0) {
+        correctGroups.forEach(cg => {
+            document.querySelectorAll(`.sel-g${cg.colorId}`).forEach(el => el.classList.add("correct-anim"));
         });
-        
         await new Promise(r => setTimeout(r, 500));
-
-        correctThisTurn.forEach(ct => {
-            renderSolvedRow(ct.group, COLORS[ct.group.level]);
-            currentItems = currentItems.filter(i => !ct.words.includes(i));
-            solvedLevels.push(ct.group.level);
+        correctGroups.forEach(cg => {
+            renderSolvedRow(cg.group, COLORS[cg.colorId]);
+            currentItems = currentItems.filter(i => !cg.words.includes(i));
+            solvedLevels.push(cg.colorId);
         });
     }
 
-    if (wrongThisTurn.length > 0) {
-        wrongThisTurn.forEach(colorId => {
-            document.querySelectorAll(`.sel-g${colorId}`).forEach(el => {
+    if (wrongColors.length > 0) {
+        wrongColors.forEach(c => {
+            document.querySelectorAll(`.sel-g${c}`).forEach(el => {
                 el.classList.add("shake");
                 setTimeout(() => el.classList.remove("shake"), 450);
             });
@@ -190,63 +156,48 @@ document.getElementById("submitBtn").onclick = async () => {
         lives--;
     }
 
-    userAssignments = {};
-    renderGrid();
-    updateUI();
-
-    if (solvedLevels.length === 4) {
-        showGameOver("Parabéns! 🎈", "Você encontrou as conexões ocultas!", COLORS[1], true);
-    } else if (lives <= 0) {
-        showGameOver("Que pena! 😔", "Você não encontrou as conexões ocultas. Tente novamente amanhã.", COLORS[3], true);
-    }
+    userAssignments = {}; renderGrid(); updateUI();
+    if (solvedLevels.length === 4) showGameOver("Parabéns! 🎈", "", COLORS[1], true);
+    else if (lives <= 0) showGameOver("Que pena! 😔", "", COLORS[3], true);
 };
 
 function renderSolvedRow(group, color) {
-    const container = document.getElementById("solved-container");
     const div = document.createElement("div");
     div.className = "solved-row";
     div.style.backgroundColor = color;
     div.innerHTML = `<div class="group-title">${group.title}</div><div>${group.items.join(", ")}</div>`;
-    container.appendChild(div);
+    document.getElementById("solved-container").appendChild(div);
 }
 
-function showGameOver(title, msg, color, save = false) {
+function showGameOver(title, msg, color, save) {
     clearInterval(timerInterval);
-    const finalTime = document.getElementById("liveTimer").textContent;
-    
     const panel = document.getElementById("status-panel");
-    document.getElementById("status-title").textContent = title;
-    document.getElementById("status-title").style.color = color;
-    document.getElementById("status-message").textContent = msg;
+    const statusTitle = document.getElementById("status-title");
+    const statusMessage = document.getElementById("status-message");
+    const timeText = document.getElementById("liveTimer").textContent;
+    const totalAttempts = maxLives - lives;
 
-    const attemptsUsed = maxLives - lives;
-    document.getElementById("final-stats").innerHTML = `
-        <div class="stats-container">
-            <div class="stat-item"><strong>Tentativas:</strong> ${attemptsUsed}/${maxLives}</div>
-            <div class="stat-item"><strong>Tempo:</strong> ${finalTime}</div>
-        </div>
-    `;
+    statusTitle.textContent = title;
+    statusTitle.style.color = color;
     
+    if (solvedLevels.length === 4) {
+        statusMessage.innerHTML = `Você precisou de <strong>${timeText}</strong> para encontrar as conexões ocultas em <strong>${totalAttempts}</strong> tentativas!`;
+    } else {
+        statusMessage.innerHTML = "Você não encontrou as conexões ocultas de hoje. Tente novamente amanhã.";
+    }
+
     panel.classList.remove("hidden");
     document.getElementById("game-controls").style.display = "none";
-    document.getElementById("grid").style.pointerEvents = "none";
     document.getElementById("grid").style.opacity = "0.5";
-
-    if (save) {
-        localStorage.setItem(`nexo_status_${currentKey}`, solvedLevels.length === 4 ? "won" : "lost");
-    }
+    if (save) localStorage.setItem(`nexo_status_${currentKey}`, solvedLevels.length === 4 ? "won" : "lost");
 }
 
 function shareResult() {
-    const text = `MEDnexo: Tentei o desafio de hoje! 🩺`;
-    navigator.clipboard.writeText(text);
-    alert("Resultado copiado!");
+    const timeText = document.getElementById("liveTimer").textContent;
+    const totalAttempts = maxLives - lives;
+    navigator.clipboard.writeText(`MEDnexo (${currentKey})\nConcluí o desafio em ${timeText} e ${totalAttempts} tentativas! 🩺`);
+    alert("Copiado!");
 }
 
-document.getElementById("clearBtn").onclick = () => {
-    userAssignments = {};
-    renderGrid();
-    updateUI();
-};
-
+document.getElementById("clearBtn").onclick = () => { userAssignments = {}; renderGrid(); updateUI(); };
 init();

@@ -7,18 +7,22 @@
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
+  <a href="https://naciflarissa.github.io/testesmedjogos/" class="back-link">
+    <span class="arrow">⬅</span> Voltar para MEDjogos
+  </a>
+
   <div class="app">
     <header>
-      <h1>MEDnexo</h1>
+      <h1 class="main-title">MEDnexo</h1>
+      <p class="main-subtitle">Descubra a conexão oculta!</p>
       <div class="date-selector">
         <label for="day-select">Jogo de: </label>
         <select id="day-select" onchange="changeGame(this.value)">
-          <option value="11/01/26">11/01/26</option>
-          <option value="12/01/26">12/01/26</option>
-          <option value="13/01/26">13/01/26</option>
+          <option value="11/01/2026">11/01/2026</option>
+          <option value="12/01/2026">12/01/2026</option>
+          <option value="13/01/2026">13/01/2026</option>
         </select>
       </div>
-      <p>Identifique 4 grupos de termos que compartilham uma conexão oculta.</p>
     </header>
 
     <div class="game-stats-live">
@@ -46,7 +50,9 @@
       <h2 id="status-title"></h2>
       <div id="final-stats"></div>
       <p id="status-message"></p>
-      <button id="shareBtn" onclick="shareResult()">Compartilhar Resultado</button>
+      <div class="action-buttons">
+         <button id="shareBtn" onclick="shareResult()">Compartilhar Resultado</button>
+      </div>
     </div>
 
     <footer class="watermark">Larissa Nacif</footer>
